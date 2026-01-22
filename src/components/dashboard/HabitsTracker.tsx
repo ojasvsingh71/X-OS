@@ -77,7 +77,7 @@ export default function HabitsTracker({
       if (!res.ok) throw new Error("Failed");
 
       alert("Log Saved!");
-      router.refresh(); 
+      router.refresh();
     } catch (err) {
       alert("Error saving log.");
     } finally {
@@ -104,11 +104,10 @@ export default function HabitsTracker({
         value: value,
       };
     })
-    .slice(-14); 
+    .slice(-14);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
- 
       <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-3xl p-6 h-fit shadow-xl">
         <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-white">
           <Activity className="text-blue-400" /> Log Activity
@@ -118,7 +117,7 @@ export default function HabitsTracker({
           <div>
             <label className="text-xs text-slate-400 uppercase font-bold tracking-wider">
               Date
-            </label>    
+            </label>
             <input
               type="date"
               value={date}
@@ -279,8 +278,8 @@ export default function HabitsTracker({
                     borderRadius: "8px",
                   }}
                   itemStyle={{ color: "#60a5fa" }}
-                  formatter={(value: number) => [
-                    value,
+                  formatter={(value: number | undefined) => [
+                    value ?? 0,
                     selectedMetric === "sleep" ? "Hours" : "Count",
                   ]}
                   cursor={{ stroke: "#ffffff20" }}
