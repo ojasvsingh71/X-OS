@@ -132,7 +132,7 @@ export default async function Dashboard() {
             <h3 className="text-blue-200 text-sm font-medium mb-2">
               Today's Focus
             </h3>
-            <p className="text-white font-semibold text-lg italic">
+            <p className="text-white font-semibold text-lg">
               "Consistency is the key to mastery."
             </p>
             <div className="mt-4 flex gap-2">

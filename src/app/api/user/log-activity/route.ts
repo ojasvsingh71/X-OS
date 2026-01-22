@@ -16,27 +16,30 @@ export async function POST(req: Request) {
     const user = await User.findById(session.id);
 
     const existingLogIndex = user.dailyLogs.findIndex(
-      (log: any) => log.date === date
+      (log: any) => log.date === date,
     );
 
     if (existingLogIndex > -1) {
-      user.dailyLogs[existingLogIndex].studyHours = studyHours;
-      user.dailyLogs[existingLogIndex].dsaSolved = dsaSolved;
-      user.dailyLogs[existingLogIndex].sleepHours = sleepHours;
-      user.dailyLogs[existingLogIndex].exercises = exercises;
+      const targetLog = user.dailyLogs[existingLogIndex];
+
+      targetLog.studyHours = studyHours ?? targetLog.studyHours;
+      targetLog.dsaSolved = dsaSolved ?? targetLog.dsaSolved;
+      targetLog.sleepHours = sleepHours ?? targetLog.sleepHours;
+      targetLog.exercises = exercises ?? targetLog.exercises;
     } else {
       user.dailyLogs.push({
         date,
-        studyHours,
-        dsaSolved,
-        sleepHours,
-        exercises,
+        studyHours: studyHours || 0,
+        dsaSolved: dsaSolved || 0,
+        sleepHours: sleepHours || 0,
+        exercises: exercises || [],
       });
     }
 
     await user.save();
     return NextResponse.json({ message: "Activity Logged" });
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: "Failed to log" }, { status: 500 });
   }
 }
