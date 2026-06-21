@@ -47,7 +47,7 @@ export default function ConnectForm() {
             className="w-full mt-2 bg-black/70 border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-blue-500/50 transition-colors "
           >
             <option value="leetcode">LeetCode</option>
-            <option value="codeforces">CodeChef</option>
+            <option value="codechef">CodeChef</option>
             <option value="codeforces">CodeForces</option>
           </select>
         </div>

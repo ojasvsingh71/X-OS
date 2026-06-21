@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
+import AcademicRecord from "@/models/AcademicRecord";
 import Navbar from "@/components/Navbar";
 import ActivityGraph from "@/components/dashboard/ActivityGraph";
 import LogActivityButton from "@/components/dashboard/LogActivityButton";
@@ -19,6 +20,16 @@ export default async function Dashboard() {
 
   if (!user) {
     redirect("/login");
+  }
+
+  // Get user's latest CGPA from academics record
+  const session = await getSession();
+  let latestCgpa = 0;
+  if (session) {
+    const latestRecord = await AcademicRecord.findOne({ userId: session.id }).sort({ semester: -1 });
+    if (latestRecord) {
+      latestCgpa = latestRecord.cgpa || 0;
+    }
   }
 
   const logs = user.dailyLogs || [];
@@ -105,7 +116,7 @@ export default async function Dashboard() {
             <div className="space-y-4">
               <div className="flex justify-between items-center border-b border-white/5 pb-3">
                 <span className="text-slate-300">CGPA</span>
-                <span className="text-xl font-bold">0.00</span>
+                <span className="text-xl font-bold">{latestCgpa > 0 ? latestCgpa.toFixed(2) : "0.00"}</span>
               </div>
               <div className="flex justify-between items-center border-b border-white/5 pb-3">
                 <span className="text-slate-300">LeetCode Solved</span>

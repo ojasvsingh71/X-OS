@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Navbar from "@/components/Navbar";
 import ConnectForm from "@/components/dsa/ConnectForm";
+import SyncDsaButton from "@/components/dsa/SyncDsaButton";
 import { getSession } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
@@ -27,6 +28,7 @@ export default async function DSAPage() {
     hard: 0,
   };
   const cfStats = user.stats?.codeforces || { rating: 0, rank: "Unrated" };
+  const ccStats = user.stats?.codechef || { rating: 0, rank: "Unrated" };
 
   const isLcConnected = !!user.codingProfiles?.leetcode;
   const isCfConnected = !!user.codingProfiles?.codeforces;
@@ -46,29 +48,29 @@ export default async function DSAPage() {
           </p>
         </div>
 
-        <a
-          href="https://leetcode.com/problemset/all/"
-          target="_blank"
-          className="hidden md:flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-        >
-          Solve a Problem <ExternalLink size={14} />
-        </a>
+        <div className="flex items-center gap-4">
+          <SyncDsaButton />
+          <a
+            href="https://leetcode.com/problemset/all/"
+            target="_blank"
+            className="hidden md:flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            Solve a Problem <ExternalLink size={14} />
+          </a>
+        </div>
       </div>
 
-      <div
-        className={`grid grid-cols-1 ${
-          showConnectForm ? "lg:grid-cols-3" : "lg:grid-cols-2"
-        } gap-6`}
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {showConnectForm && <ConnectForm />}
 
         <div
           className={
             showConnectForm
-              ? "lg:col-span-2 space-y-6"
-              : "col-span-1 lg:col-span-2 grid lg:grid-cols-2 gap-6 space-y-0"
+              ? "lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6"
+              : "lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6"
           }
         >
+          {/* LeetCode Card */}
           <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden group h-full">
             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-orange-500/20 transition-all"></div>
 
@@ -134,6 +136,7 @@ export default async function DSAPage() {
             </div>
           </div>
 
+          {/* Codeforces Card */}
           <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden group h-full">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-blue-500/20 transition-all"></div>
 
@@ -143,7 +146,7 @@ export default async function DSAPage() {
                   <Trophy size={24} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">CodeForces</h3>
+                  <h3 className="text-lg font-bold">Codeforces</h3>
                   <p className="text-xs text-slate-400">
                     {isCfConnected
                       ? `@${user.codingProfiles.codeforces}`
@@ -167,13 +170,62 @@ export default async function DSAPage() {
             <div className="mt-6 grid grid-cols-2 gap-4 text-center">
               <div>
                 <div className="text-2xl font-bold text-white">
-                  {cfStats.rating}
+                  {cfStats.rating || "--"}
                 </div>
-                <div className="text-xs text-slate-500">Max Rating</div>
+                <div className="text-xs text-slate-505">Rating</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-white">--</div>
-                <div className="text-xs text-slate-500">Contests</div>
+                <div className="text-2xl font-bold text-white">
+                  {cfStats.rank || "--"}
+                </div>
+                <div className="text-xs text-slate-505">Rank</div>
+              </div>
+            </div>
+          </div>
+
+          {/* CodeChef Card */}
+          <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden group h-full">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-yellow-500/20 transition-all"></div>
+
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-500/20 rounded-lg text-yellow-400">
+                  <Trophy size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">CodeChef</h3>
+                  <p className="text-xs text-slate-400">
+                    {isCcconnected
+                      ? `@${user.codingProfiles.codechef}`
+                      : "Not Connected"}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span
+                  className={`inline-block px-3 py-1 rounded-full border text-sm font-medium ${
+                    ccStats.rating > 0
+                      ? "bg-yellow-900/30 border-yellow-500 text-yellow-300"
+                      : "bg-slate-800 border-slate-700 text-slate-300"
+                  }`}
+                >
+                  {ccStats.rank || "Unrated"}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-white">
+                  {ccStats.rating || "--"}
+                </div>
+                <div className="text-xs text-slate-505">Rating</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-white">
+                  {ccStats.rank || "--"}
+                </div>
+                <div className="text-xs text-slate-505">Stars</div>
               </div>
             </div>
           </div>

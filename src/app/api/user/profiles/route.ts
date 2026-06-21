@@ -3,6 +3,8 @@ import { getSession } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
 import { fetchLeetCodeStats } from "@/lib/leetcode";
+import { fetchCodeforcesStats } from "@/lib/codeforces";
+import { fetchCodechefStats } from "@/lib/codechef";
 
 export async function POST(req: Request) {
   try {
@@ -39,6 +41,40 @@ export async function POST(req: Request) {
         };
       } else {
         console.error(`[API] Stats were NULL.`);
+      }
+    } else if (platform === "codeforces") {
+      user.codingProfiles.codeforces = username;
+
+      console.log(`[API] Fetching Codeforces stats for ${username}...`);
+      const stats = await fetchCodeforcesStats(username);
+
+      if (stats) {
+        console.log(`[API] Codeforces stats found! Saving to DB...`, stats);
+
+        user.stats.codeforces = {
+          rating: stats.rating,
+          rank: stats.rank,
+          lastUpdated: new Date(),
+        };
+      } else {
+        console.error(`[API] Codeforces stats were NULL.`);
+      }
+    } else if (platform === "codechef") {
+      user.codingProfiles.codechef = username;
+
+      console.log(`[API] Fetching CodeChef stats for ${username}...`);
+      const stats = await fetchCodechefStats(username);
+
+      if (stats) {
+        console.log(`[API] CodeChef stats found! Saving to DB...`, stats);
+
+        user.stats.codechef = {
+          rating: stats.rating,
+          rank: stats.rank,
+          lastUpdated: new Date(),
+        };
+      } else {
+        console.error(`[API] CodeChef stats were NULL.`);
       }
     }
 

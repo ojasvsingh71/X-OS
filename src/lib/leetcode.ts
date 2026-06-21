@@ -1,4 +1,4 @@
-export async function fetchLeetCodeStats(username: string) {
+export async function fetchLeetCodeStats(username: string, forceRefresh = false) {
   const query = `
     query userProblemsSolved($username: String!) {
       allQuestionsCount { difficulty count }
@@ -24,6 +24,7 @@ export async function fetchLeetCodeStats(username: string) {
         query,
         variables: { username },
       }),
+      cache: forceRefresh ? "no-store" : undefined,
     });
 
     if (!response.ok) {
