@@ -5,6 +5,7 @@ import User from "@/models/User";
 import { fetchLeetCodeStats } from "@/lib/leetcode";
 import { fetchCodeforcesStats } from "@/lib/codeforces";
 import { fetchCodechefStats } from "@/lib/codechef";
+import { syncMonkeytypeStatsForUser } from "@/lib/monkeytype";
 
 export async function POST(req: Request) {
   try {
@@ -27,6 +28,37 @@ export async function POST(req: Request) {
       console.log(`[Sync] Bypassing cache to sync LeetCode for ${user.codingProfiles.leetcode}...`);
       const stats = await fetchLeetCodeStats(user.codingProfiles.leetcode, true);
       if (stats) {
+        const previousTotal = user.stats?.leetcode?.totalSolved || 0;
+        const newTotal = stats.totalSolved;
+
+        if (previousTotal > 0 && newTotal > previousTotal) {
+          const diff = newTotal - previousTotal;
+          const todayStr = new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Asia/Kolkata",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(new Date());
+
+          const existingLogIndex = user.dailyLogs.findIndex(
+            (log: any) => log.date === todayStr
+          );
+
+          if (existingLogIndex > -1) {
+            user.dailyLogs[existingLogIndex].dsaSolved =
+              (user.dailyLogs[existingLogIndex].dsaSolved || 0) + diff;
+          } else {
+            user.dailyLogs.push({
+              date: todayStr,
+              studyHours: 0,
+              dsaSolved: diff,
+              sleepHours: 0,
+              exercises: [],
+            });
+          }
+          console.log(`[Sync] Automatically added ${diff} solved problems to today's log`);
+        }
+
         user.stats.leetcode = {
           totalSolved: stats.totalSolved,
           easy: stats.easy,
@@ -64,6 +96,17 @@ export async function POST(req: Request) {
           lastUpdated: new Date(),
         };
         updated = true;
+      }
+    }
+
+    // 4. Sync Monkeytype
+    if (user.codingProfiles?.monkeytypeKey) {
+      try {
+        console.log(`[Sync] Syncing Monkeytype for user ${user.username}...`);
+        await syncMonkeytypeStatsForUser(user);
+        updated = true;
+      } catch (err) {
+        console.error("Monkeytype sync failed:", err);
       }
     }
 

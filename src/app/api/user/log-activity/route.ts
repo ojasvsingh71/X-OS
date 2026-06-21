@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     if (!session)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { studyHours, dsaSolved, sleepHours, exercises, date } =
+    const { studyHours, dsaSolved, sleepHours, exercises, steps, date } =
       await req.json();
 
     await connectDB();
@@ -25,14 +25,41 @@ export async function POST(req: Request) {
       targetLog.studyHours = studyHours ?? targetLog.studyHours;
       targetLog.dsaSolved = dsaSolved ?? targetLog.dsaSolved;
       targetLog.sleepHours = sleepHours ?? targetLog.sleepHours;
-      targetLog.exercises = exercises ?? targetLog.exercises;
+      
+      if (steps !== undefined && steps !== null) {
+        const stepsExIndex = targetLog.exercises.findIndex(
+          (ex: any) => ex.name === "Steps",
+        );
+        if (stepsExIndex > -1) {
+          targetLog.exercises[stepsExIndex].count = String(steps);
+        } else {
+          targetLog.exercises.push({
+            name: "Steps",
+            count: String(steps),
+            unit: "steps",
+          });
+        }
+      }
+
+      if (exercises !== undefined) {
+        targetLog.exercises = exercises;
+      }
     } else {
+      const finalExercises = exercises || [];
+      if (steps !== undefined && steps !== null) {
+        finalExercises.push({
+          name: "Steps",
+          count: String(steps),
+          unit: "steps",
+        });
+      }
+
       user.dailyLogs.push({
         date,
         studyHours: studyHours || 0,
         dsaSolved: dsaSolved || 0,
         sleepHours: sleepHours || 0,
-        exercises: exercises || [],
+        exercises: finalExercises,
       });
     }
 

@@ -10,6 +10,8 @@ const UserSchema = new mongoose.Schema(
       leetcode: { type: String, default: "" },
       codechef: { type: String, default: "" },
       codeforces: { type: String, default: "" },
+      monkeytype: { type: String, default: "" },
+      monkeytypeKey: { type: String, default: "" },
     },
     stats: {
       leetcode: {
@@ -30,9 +32,20 @@ const UserSchema = new mongoose.Schema(
         rank: { type: String, default: "Unrated" },
         lastUpdated: { type: Date, default: Date.now },
       },
+      monkeytype: {
+        wpm: { type: Number, default: 0 },
+        accuracy: { type: Number, default: 0 },
+        lastUpdated: { type: Date, default: Date.now },
+      },
     },
     academic: {
       targetCgpa: { type: Number, default: 0 },
+    },
+    googleFit: {
+      connected: { type: Boolean, default: false },
+      accessToken: { type: String, default: "" },
+      refreshToken: { type: String, default: "" },
+      expiryDate: { type: Number, default: 0 },
     },
     dailyLogs: [
       {

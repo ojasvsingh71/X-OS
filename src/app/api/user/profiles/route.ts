@@ -5,6 +5,7 @@ import User from "@/models/User";
 import { fetchLeetCodeStats } from "@/lib/leetcode";
 import { fetchCodeforcesStats } from "@/lib/codeforces";
 import { fetchCodechefStats } from "@/lib/codechef";
+import { fetchMonkeytypeStats } from "@/lib/monkeytype";
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
     if (!session)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { platform, username } = await req.json();
+    const { platform, username, apiKey } = await req.json();
     console.log(`[API] Attempting to link ${platform} for user ${username}...`);
 
     await connectDB();
@@ -75,6 +76,24 @@ export async function POST(req: Request) {
         };
       } else {
         console.error(`[API] CodeChef stats were NULL.`);
+      }
+    } else if (platform === "monkeytype") {
+      user.codingProfiles.monkeytype = username;
+      user.codingProfiles.monkeytypeKey = apiKey || "";
+
+      console.log(`[API] Fetching Monkeytype stats for ${username}...`);
+      const stats = await fetchMonkeytypeStats(apiKey || "");
+
+      if (stats) {
+        console.log(`[API] Monkeytype stats found! Saving to DB...`, stats);
+
+        user.stats.monkeytype = {
+          wpm: stats.wpm,
+          accuracy: stats.accuracy,
+          lastUpdated: new Date(),
+        };
+      } else {
+        console.error(`[API] Monkeytype stats were NULL.`);
       }
     }
 

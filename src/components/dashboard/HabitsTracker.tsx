@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Save, Activity, Moon, Plus } from "lucide-react";
+import { Trash2, Save, Activity, Moon, Plus, RefreshCw } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -18,21 +18,42 @@ type DailyLog = { date: string; sleepHours: number; exercises: Exercise[] };
 
 export default function HabitsTracker({
   initialLogs,
+  googleFitConnected,
 }: {
   initialLogs: DailyLog[];
+  googleFitConnected: boolean;
 }) {
   const router = useRouter();
 
   const [logs, setLogs] = useState<DailyLog[]>(initialLogs);
   const [loading, setLoading] = useState(false);
+  const [syncingFit, setSyncingFit] = useState(false);
 
   const [date, setDate] = useState(
     new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }),
   );
   const [sleep, setSleep] = useState<string>("");
+  const [steps, setSteps] = useState<string>("");
   const [exercises, setExercises] = useState<Exercise[]>([]);
 
   const [selectedMetric, setSelectedMetric] = useState("sleep");
+
+  const handleSyncGoogleFit = async () => {
+    setSyncingFit(true);
+    try {
+      const res = await fetch("/api/user/sync-googlefit", { method: "POST" });
+      if (!res.ok) throw new Error("Sync failed");
+      const data = await res.json();
+      alert(`${data.message} Synced steps count: ${data.steps}`);
+      
+      // Reload page to fetch updated logs
+      window.location.reload();
+    } catch (err) {
+      alert("Failed to sync Google Fit steps. Ensure OAuth permissions are granted.");
+    } finally {
+      setSyncingFit(false);
+    }
+  };
 
   const availableMetrics = Array.from(
     new Set([
@@ -66,6 +87,7 @@ export default function HabitsTracker({
       const payload = {
         date,
         sleepHours: Number(sleep) || 0,
+        steps: Number(steps) || 0,
         exercises: exercises.filter((e) => e.name && e.count > 0),
       };
 
@@ -77,6 +99,7 @@ export default function HabitsTracker({
       if (!res.ok) throw new Error("Failed");
 
       alert("Log Saved!");
+      setSteps("");
       router.refresh();
     } catch (err) {
       alert("Error saving log.");
@@ -93,7 +116,7 @@ export default function HabitsTracker({
         value = log.sleepHours || 0;
       } else {
         const ex = log.exercises?.find((e) => e.name === selectedMetric);
-        value = ex ? ex.count : 0;
+        value = ex ? (Number(ex.count) || 0) : 0;
       }
 
       return {
@@ -136,6 +159,19 @@ export default function HabitsTracker({
               onChange={(e) => setSleep(e.target.value)}
               className="w-full bg-black/40 border border-white/10 rounded-lg p-3 mt-1 text-white outline-none focus:border-blue-500 transition-colors"
               placeholder="e.g. 7.5"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-slate-400 uppercase font-bold flex items-center gap-2 tracking-wider">
+              Steps Walked
+            </label>
+            <input
+              type="number"
+              value={steps}
+              onChange={(e) => setSteps(e.target.value)}
+              className="w-full bg-black/40 border border-white/10 rounded-lg p-3 mt-1 text-white outline-none focus:border-blue-500 transition-colors"
+              placeholder="e.g. 8000"
             />
           </div>
 
@@ -199,6 +235,34 @@ export default function HabitsTracker({
               </>
             )}
           </button>
+
+          <div className="border-t border-white/10 pt-4 mt-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <h4 className="text-xs text-slate-400 uppercase font-bold tracking-wider">
+                Integrations
+              </h4>
+            </div>
+            {!googleFitConnected ? (
+              <a
+                href="/api/auth/google"
+                className="w-full bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-200 font-medium py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 text-sm"
+              >
+                <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                  <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-6.887 4.114-4.833 0-8.75-3.86-8.75-8.625s3.917-8.624 8.75-8.624c2.25 0 4.19.813 5.7 2.212l3.18-3.18C18.91 1.706 15.89 0 12.24 0 5.48 0 0 5.48 0 12.24s5.48 12.24 12.24 12.24c5.74 0 10.97-4.1 10.97-12.24 0-.83-.08-1.635-.21-2.355H12.24z"/>
+                </svg>
+                Connect Google Fit
+              </a>
+            ) : (
+              <button
+                onClick={handleSyncGoogleFit}
+                disabled={syncingFit}
+                className="w-full bg-teal-600/10 hover:bg-teal-600/20 border border-teal-500/20 text-teal-200 font-medium py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 text-sm cursor-pointer"
+              >
+                <RefreshCw className={`h-4 w-4 ${syncingFit ? 'animate-spin text-teal-400' : ''}`} size={16} />
+                {syncingFit ? "Syncing steps..." : "Sync Google Fit Steps"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

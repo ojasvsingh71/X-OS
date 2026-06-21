@@ -15,6 +15,7 @@ export default function LogActivityButton() {
     studyHours: 0,
     dsaSolved: 0,
     sleepHours: 0,
+    steps: 0,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,6 +109,23 @@ export default function LogActivityButton() {
                     setFormData({
                       ...formData,
                       sleepHours: Number(e.target.value),
+                    })
+                  }
+                  className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-white mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-400 uppercase font-bold">
+                  Steps Walked
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 8000"
+                  value={formData.steps || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      steps: Number(e.target.value) || 0,
                     })
                   }
                   className="w-full bg-black/20 border border-white/10 rounded-lg p-2 text-white mt-1"

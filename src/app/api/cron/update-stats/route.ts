@@ -4,6 +4,8 @@ import User from "@/models/User";
 import { fetchLeetCodeStats } from "@/lib/leetcode";
 import { fetchCodeforcesStats } from "@/lib/codeforces";
 import { fetchCodechefStats } from "@/lib/codechef";
+import { syncGoogleFitStepsForUser } from "@/lib/googlefit";
+import { syncMonkeytypeStatsForUser } from "@/lib/monkeytype";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +23,8 @@ export async function GET(req: Request) {
         { "codingProfiles.leetcode": { $ne: "" } },
         { "codingProfiles.codeforces": { $ne: "" } },
         { "codingProfiles.codechef": { $ne: "" } },
+        { "codingProfiles.monkeytypeKey": { $ne: "" } },
+        { "googleFit.connected": true },
       ],
     });
 
@@ -35,6 +39,37 @@ export async function GET(req: Request) {
         if (user.codingProfiles.leetcode) {
           const stats = await fetchLeetCodeStats(user.codingProfiles.leetcode);
           if (stats) {
+            const previousTotal = user.stats?.leetcode?.totalSolved || 0;
+            const newTotal = stats.totalSolved;
+
+            if (previousTotal > 0 && newTotal > previousTotal) {
+              const diff = newTotal - previousTotal;
+              const todayStr = new Intl.DateTimeFormat("en-CA", {
+                timeZone: "Asia/Kolkata",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              }).format(new Date());
+
+              const existingLogIndex = user.dailyLogs.findIndex(
+                (log: any) => log.date === todayStr
+              );
+
+              if (existingLogIndex > -1) {
+                user.dailyLogs[existingLogIndex].dsaSolved =
+                  (user.dailyLogs[existingLogIndex].dsaSolved || 0) + diff;
+              } else {
+                user.dailyLogs.push({
+                  date: todayStr,
+                  studyHours: 0,
+                  dsaSolved: diff,
+                  sleepHours: 0,
+                  exercises: [],
+                });
+              }
+              console.log(`[CRON] Automatically added ${diff} solved problems to ${user.username}'s log`);
+            }
+
             user.stats.leetcode = {
               totalSolved: stats.totalSolved,
               easy: stats.easy,
@@ -70,6 +105,28 @@ export async function GET(req: Request) {
               lastUpdated: new Date(),
             };
             updatedUser = true;
+          }
+        }
+
+        // Update Google Fit Steps
+        if (user.googleFit?.connected) {
+          try {
+            console.log(`[CRON] Syncing Google Fit steps for user ${user.username}...`);
+            await syncGoogleFitStepsForUser(user);
+            updatedUser = true;
+          } catch (fitErr) {
+            console.error(`[CRON] Failed to sync Google Fit steps for user ${user.username}`, fitErr);
+          }
+        }
+
+        // Update Monkeytype WPM
+        if (user.codingProfiles?.monkeytypeKey) {
+          try {
+            console.log(`[CRON] Syncing Monkeytype for user ${user.username}...`);
+            await syncMonkeytypeStatsForUser(user);
+            updatedUser = true;
+          } catch (mErr) {
+            console.error(`[CRON] Failed to sync Monkeytype for user ${user.username}`, mErr);
           }
         }
 

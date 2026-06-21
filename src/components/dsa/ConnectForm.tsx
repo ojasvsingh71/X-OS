@@ -7,6 +7,7 @@ export default function ConnectForm() {
   const [loading, setLoading] = useState(false);
   const [platform, setPlatform] = useState("leetcode");
   const [usernameInput, setUsernameInput] = useState("");
+  const [apiKeyInput, setApiKeyInput] = useState("");
 
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,13 +16,18 @@ export default function ConnectForm() {
       const res = await fetch("/api/user/profiles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ platform, username: usernameInput }),
+        body: JSON.stringify({
+          platform,
+          username: usernameInput,
+          apiKey: apiKeyInput,
+        }),
       });
       if (!res.ok) throw new Error("Failed");
       alert(
         "Profile Linked! Please wait for the nightly Cron Job to fetch stats, or trigger it manually."
       );
       setUsernameInput("");
+      setApiKeyInput("");
     } catch (error) {
       alert("Error linking profile");
     } finally {
@@ -49,6 +55,7 @@ export default function ConnectForm() {
             <option value="leetcode">LeetCode</option>
             <option value="codechef">CodeChef</option>
             <option value="codeforces">CodeForces</option>
+            <option value="monkeytype">Monkeytype</option>
           </select>
         </div>
 
@@ -59,12 +66,28 @@ export default function ConnectForm() {
           <input
             type="text"
             required
-            placeholder="e.g. neetcode"
+            placeholder={platform === "monkeytype" ? "e.g. ojasvsingh" : "e.g. neetcode"}
             value={usernameInput}
             onChange={(e) => setUsernameInput(e.target.value)}
             className="w-full mt-2 bg-black/20 border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-blue-500/50 transition-colors placeholder:text-slate-600 text-slate-300"
           />
         </div>
+
+        {platform === "monkeytype" && (
+          <div>
+            <label className="text-xs text-slate-400 uppercase tracking-wider font-semibold">
+              Monkeytype ApeKey (API Key)
+            </label>
+            <input
+              type="password"
+              required
+              placeholder="e.g. mt_..."
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              className="w-full mt-2 bg-black/20 border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-blue-500/50 transition-colors placeholder:text-slate-600 text-slate-300"
+            />
+          </div>
+        )}
 
         <button
           disabled={loading}

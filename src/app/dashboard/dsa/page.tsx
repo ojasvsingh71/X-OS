@@ -6,7 +6,7 @@ import SyncDsaButton from "@/components/dsa/SyncDsaButton";
 import { getSession } from "@/lib/auth";
 import connectDB from "@/lib/db";
 import User from "@/models/User";
-import { Code2, Trophy, ExternalLink } from "lucide-react";
+import { Code2, Trophy, ExternalLink, Keyboard } from "lucide-react";
 import { redirect } from "next/navigation";
 
 const calculateWidth = (solved: number, total: number) => {
@@ -29,12 +29,15 @@ export default async function DSAPage() {
   };
   const cfStats = user.stats?.codeforces || { rating: 0, rank: "Unrated" };
   const ccStats = user.stats?.codechef || { rating: 0, rank: "Unrated" };
+  const mtStats = user.stats?.monkeytype || { wpm: 0, accuracy: 0 };
 
   const isLcConnected = !!user.codingProfiles?.leetcode;
   const isCfConnected = !!user.codingProfiles?.codeforces;
   const isCcconnected = !!user.codingProfiles?.codechef;
+  const isMtConnected = !!user.codingProfiles?.monkeytypeKey;
 
-  const showConnectForm = !isLcConnected || !isCfConnected || !isCcconnected;
+  const showConnectForm =
+    !isLcConnected || !isCfConnected || !isCcconnected || !isMtConnected;
 
   return (
     <div className="min-h-screen pt-24 pb-24 md:pb-12 px-6 md:px-12 text-white">
@@ -67,7 +70,7 @@ export default async function DSAPage() {
           className={
             showConnectForm
               ? "lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6"
-              : "lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6"
+              : "lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
           }
         >
           {/* LeetCode Card */}
@@ -226,6 +229,53 @@ export default async function DSAPage() {
                   {ccStats.rank || "--"}
                 </div>
                 <div className="text-xs text-slate-505">Stars</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Monkeytype Card */}
+          <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden group h-full">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-yellow-500/20 transition-all"></div>
+
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-500/20 rounded-lg text-[#e2b714]">
+                  <Keyboard size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold">Monkeytype</h3>
+                  <p className="text-xs text-slate-400">
+                    {isMtConnected
+                      ? `@${user.codingProfiles.monkeytype}`
+                      : "Not Connected"}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span
+                  className={`inline-block px-3 py-1 rounded-full border text-sm font-medium ${
+                    mtStats.wpm > 0
+                      ? "bg-yellow-900/30 border-[#e2b714] text-yellow-300"
+                      : "bg-slate-800 border-slate-700 text-slate-300"
+                  }`}
+                >
+                  {mtStats.wpm > 0 ? `${mtStats.wpm} WPM` : "Unrated"}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-white">
+                  {mtStats.wpm || "--"}
+                </div>
+                <div className="text-xs text-slate-505">Top Speed (WPM)</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-white">
+                  {mtStats.accuracy ? `${mtStats.accuracy}%` : "--"}
+                </div>
+                <div className="text-xs text-slate-505">Accuracy</div>
               </div>
             </div>
           </div>
